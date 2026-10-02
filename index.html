@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpringAuthKit — Authentication Infrastructure for Spring Boot</title>
+    <meta
+      name="description"
+      content="SpringAuthKit is a reusable Spring Boot authentication and authorization library built with JWT, Spring Security, JPA, OTP, and auto-configuration."
+    />
+    <meta name="theme-color" content="#0b1020" />
+    <meta property="og:title" content="SpringAuthKit — Authentication Infrastructure for Spring Boot" />
+    <meta
+      property="og:description"
+      content="Reusable JWT-based authentication infrastructure for Spring Boot applications."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b1020'/%3E%3Cpath d='M16 40V24h32v16M22 24V16h20v8M24 32h16v8H24z' fill='%237dd3fc'/%3E%3C/svg%3E" />
+    <style>
+      :root {
+        --bg: #0b1020;
+        --bg-2: #111827;
+        --panel: rgba(15, 23, 42, 0.82);
+        --panel-strong: #111827;
+        --panel-alt: #0f172a;
+        --border: rgba(148, 163, 184, 0.2);
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --subtle: #cbd5e1;
+        --primary: #7dd3fc;
+        --primary-2: #38bdf8;
+        --accent: #a78bfa;
+        --success: #34d399;
+        --warning: #fbbf24;
+        --danger: #f87171;
+        --shadow: 0 20px 50px rgba(15, 23, 42, 0.45);
+        --radius: 18px;
+        --radius-sm: 12px;
+        --sidebar-width: 280px;
+        --content-width: 1100px;
+      }
+
+      * { box-sizing: border-box; }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(56, 189, 248, 0.12), transparent 28%),
+          linear-gradient(180deg, #0b1020 0%, #0f172a 100%);
+        color: var(--text);
+        line-height: 1.6;
+      }
+
+      a { color: inherit; text-decoration: none; }
+      img { max-width: 100%; display: block; }
+      ul, ol { padding-left: 1.2rem; }
+      li { margin-bottom: 0.45rem; }
+      code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+
+      .container {
+        width: min(var(--content-width), calc(100% - 2rem));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(18px);
+        background: rgba(11, 16, 32, 0.78);
+      }
+
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 72px;
+        gap: 1rem;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+      }
+
+      .brand-mark {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        position: relative;
+        box-shadow: 0 10px 25px rgba(125, 211, 252, 0.32);
+      }
+
+      .brand-mark::before {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        border-radius: 8px;
+        background: rgba(11, 16, 32, 0.7);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        flex-wrap: wrap;
+      }
+
+      .nav a {
+        color: var(--muted);
+        font-size: 0.94rem;
+        transition: color 0.2s ease;
+      }
+
+      .nav a:hover,
+      .nav a.active {
+        color: var(--text);
+      }
+
+      .button,
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: 1px solid rgba(125, 211, 252, 0.25);
+        border-radius: 999px;
+        padding: 0.8rem 1.15rem;
+        background: rgba(125, 211, 252, 0.08);
+        color: var(--text);
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+      }
+
+      .button:hover,
+      .btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(125, 211, 252, 0.45);
+      }
+
+      .button.primary,
+      .btn.primary {
+        background: linear-gradient(135deg, var(--primary), var(--primary-2));
+        color: #061321;
+        border-color: transparent;
+        box-shadow: 0 12px 30px rgba(56, 189, 248, 0.28);
+      }
+
+      .button.secondary {
+        background: rgba(255,255,255,0.02);
+      }
+
+      .doc-shell {
+        display: grid;
+        grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+        gap: 2rem;
+        width: min(var(--content-width), calc(100% - 2rem));
+        margin: 2rem auto 4rem;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 92px;
+        align-self: start;
+        max-height: calc(100vh - 120px);
+        overflow: auto;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1rem 1rem 1.25rem;
+      }
+
+      .sidebar-title {
+        font-size: 0.74rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0.5rem 0 0.8rem;
+        padding: 0 0.4rem;
+      }
+
+      .sidebar nav a {
+        display: block;
+        color: var(--muted);
+        border-radius: 10px;
+        padding: 0.7rem 0.7rem;
+        margin: 0.15rem 0;
+        font-size: 0.94rem;
+        border: 1px solid transparent;
+      }
+
+      .sidebar nav a.active,
+      .sidebar nav a:hover {
+        color: var(--text);
+        background: rgba(125, 211, 252, 0.08);
+        border-color: rgba(125, 211, 252, 0.16);
+      }
+
+      .content {
+        min-width: 0;
+      }
+
+      section {
+        scroll-margin-top: 120px;
+        margin-bottom: 2.5rem;
+      }
+
+      .panel {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+
+      .hero {
+        background:
+          radial-gradient(circle at top right, rgba(167, 139, 250, 0.20), transparent 18%),
+          linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.7));
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: clamp(2rem, 4vw, 4rem);
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: auto -10% -30% auto;
+        width: 340px;
+        height: 340px;
+        background: radial-gradient(circle, rgba(125,211,252,0.20), transparent 62%);
+      }
+
+      .eyebrow {
+        display: inline-block;
+        font-size: 0.8rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--primary);
+        margin-bottom: 0.9rem;
+      }
+
+      h1, h2, h3 {
+        line-height: 1.15;
+        margin: 0 0 0.9rem;
+      }
+
+      h1 {
+        font-size: clamp(2.6rem, 5vw, 4.2rem);
+        max-width: 680px;
+      }
+
+      h2 {
+        font-size: clamp(1.7rem, 2vw, 2.3rem);
+        margin-top: 0.9rem;
+      }
+
+      p {
+        margin: 0 0 1rem;
+        color: var(--subtle);
+      }
+
+      .lead {
+        max-width: 780px;
+        font-size: 1.08rem;
+        color: var(--subtle);
+      }
+
+      .badge-row,
+      .cta-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+
+      .badge-row {
+        margin: 1.25rem 0 1.5rem;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        border: 1px solid rgba(148,163,184,0.18);
+        background: rgba(148,163,184,0.05);
+        color: var(--subtle);
+        font-size: 0.78rem;
+        letter-spacing: 0.02em;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 1.6rem;
+        margin-top: 2rem;
+        align-items: stretch;
+      }
+
+      .mini-card {
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 1.1rem 1.2rem;
+      }
+
+      .mini-card h3 {
+        font-size: 0.95rem;
+        margin-bottom: 0.8rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .flow {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+      }
+
+      .flow-step {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        padding: 0.7rem 0.8rem;
+        border-radius: 12px;
+        background: rgba(125,211,252,0.04);
+        border: 1px solid rgba(125,211,252,0.14);
+      }
+
+      .flow-step .num {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        color: #061321;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+      }
+
+      .section-head {
+        margin-bottom: 1.2rem;
+      }
+
+      .section-pad {
+        padding: 2rem;
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.25rem;
+      }
+
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.1rem;
+      }
+
+      .feature-card,
+      .info-card,
+      .api-card,
+      .faq-item,
+      .table-card {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 1.2rem 1.15rem;
+        box-shadow: var(--shadow);
+      }
+
+      .feature-card h3,
+      .info-card h3,
+      .api-card h3 {
+        font-size: 1.05rem;
+        margin: 0 0 0.7rem;
+      }
+
+      .feature-card .icon {
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+        background: linear-gradient(135deg, rgba(125,211,252,0.17), rgba(167,139,250,0.12));
+        border: 1px solid rgba(125,211,252,0.18);
+        font-size: 1.2rem;
+      }
+
+      .kicker {
+        color: var(--primary);
+        font-size: 0.74rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+      }
+
+      .inline-list {
+        display: grid;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+
+      .status-row {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        margin-top: 0.8rem;
+      }
+
+      .pill {
+        font-size: 0.74rem;
+        padding: 0.42rem 0.62rem;
+        border-radius: 999px;
+        color: var(--text);
+        background: rgba(52, 211, 153, 0.1);
+        border: 1px solid rgba(52, 211, 153, 0.25);
+      }
+
+      .pill.warn { background: rgba(251,191,36,0.09); border-color: rgba(251,191,36,0.25); }
+      .pill.alert { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.25); }
+
+      .architecture-diagram {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .diagram-row {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0.8rem;
+        align-items: center;
+      }
+
+      .node {
+        background: rgba(15,23,42,0.8);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 0.8rem 0.7rem;
+        text-align: center;
+        color: var(--subtle);
+        font-weight: 600;
+      }
+
+      .node.primary {
+        background: linear-gradient(135deg, rgba(125,211,252,0.14), rgba(167,139,250,0.1));
+      }
+
+      .connector {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--muted);
+        font-size: 1.4rem;
+      }
+
+      .connector::before { content: "↓"; }
+
+      .code-wrap {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .code-block {
+        background: #0a1220;
+        border: 1px solid rgba(148,163,184,0.18);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+
+      .code-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.8rem 1rem;
+        border-bottom: 1px solid rgba(148,163,184,0.14);
+        color: var(--muted);
+        font-size: 0.76rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: rgba(15, 23, 42, 0.8);
+      }
+
+      .copy-btn {
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: rgba(148,163,184,0.05);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 0.45rem 0.65rem;
+        font-size: 0.72rem;
+        cursor: pointer;
+      }
+
+      pre {
+        margin: 0;
+        padding: 1rem 1rem 1.1rem;
+        overflow-x: auto;
+        color: #dbeafe;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+      }
+
+      th, td {
+        text-align: left;
+        padding: 0.9rem 0.85rem;
+        border-bottom: 1px solid rgba(148,163,184,0.12);
+        vertical-align: top;
+      }
+
+      th {
+        background: rgba(125, 211, 252, 0.05);
+        color: var(--text);
+      }
+
+      td {
+        color: var(--subtle);
+      }
+
+      .api-table td:first-child,
+      .api-table th:first-child {
+        width: 92px;
+      }
+
+      .endpoint-label {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 8px;
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      .post { background: rgba(52,211,153,0.10); color: #bef8d8; }
+      .get { background: rgba(125,211,252,0.10); color: #dff4ff; }
+
+      .api-list {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .api-card .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin: 0.75rem 0 0.9rem;
+      }
+
+      .meta-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.72rem;
+        color: var(--muted);
+        border: 1px solid rgba(148,163,184,0.15);
+        background: rgba(148,163,184,0.05);
+        border-radius: 999px;
+        padding: 0.38rem 0.55rem;
+      }
+
+      .faq-item {
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .faq-item summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 1rem 1.1rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .faq-item summary::-webkit-details-marker { display: none; }
+
+      .faq-item .faq-answer {
+        padding: 0 1.1rem 1rem;
+        color: var(--subtle);
+      }
+
+      .back-to-top {
+        position: fixed;
+        right: 1.25rem;
+        bottom: 1.25rem;
+        z-index: 50;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 1px solid rgba(125,211,252,0.25);
+        background: rgba(11,16,32,0.82);
+        color: var(--text);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        opacity: 0;
+        transform: translateY(12px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+
+      .back-to-top.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0,0,0,0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .muted { color: var(--muted); }
+      .tiny { font-size: 0.82rem; }
+
+      @media (max-width: 980px) {
+        .doc-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+          max-height: none;
+        }
+
+        .hero-grid,
+        .two-col,
+        .card-grid,
+        .diagram-row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .nav { display: none; }
+        .mobile-menu-toggle {
+          display: inline-flex;
+        }
+
+        .topbar-inner {
+          min-height: 64px;
+        }
+
+        .sidebar {
+          display: none;
+        }
+
+        .mobile-nav {
+          display: none;
+          flex-direction: column;
+          gap: 0.2rem;
+          padding: 0.75rem 0 1rem;
+          border-top: 1px solid var(--border);
+        }
+
+        .mobile-nav.open {
+          display: flex;
+        }
+
+        .mobile-nav a {
+          padding: 0.7rem 0.5rem;
+          color: var(--muted);
+        }
+      }
+
+      @media (min-width: 761px) {
+        .mobile-menu-toggle,
+        .mobile-nav {
+          display: none !important;
+        }
+      }
+
+      .mobile-menu-toggle {
+        border: 1px solid rgba(148,163,184,0.2);
+        border-radius: 10px;
+        background: rgba(148,163,184,0.05);
+        color: var(--text);
+        width: 42px;
+        height: 42px;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container topbar-inner">
+        <a href="#hero" class="brand" aria-label="SpringAuthKit home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>SpringAuthKit</span>
+        </a>
+
+        <nav class="nav" aria-label="Main navigation">
+          <a href="#overview">Overview</a>
+          <a href="#installation">Installation</a>
+          <a href="#quickstart">Quick Start</a>
+          <a href="#configuration">Configuration</a>
+          <a href="#authentication">Authentication</a>
+          <a href="#jwt">JWT</a>
+          <a href="#api-reference">API</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+
+        <button class="mobile-menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+          ☰
+        </button>
+
+        <a class="button primary" href="#installation">Get Started</a>
+      </div>
+
+      <div class="container mobile-nav" aria-label="Mobile navigation">
+        <a href="#overview">Overview</a>
+        <a href="#installation">Installation</a>
+        <a href="#quickstart">Quick Start</a>
+        <a href="#configuration">Configuration</a>
+        <a href="#authentication">Authentication</a>
+        <a href="#jwt">JWT</a>
+        <a href="#api-reference">API</a>
+        <a href="#faq">FAQ</a>
+      </div>
+    </header>
+
+    <div class="doc-shell">
+      <aside class="sidebar" aria-label="Section navigation">
+        <div class="sidebar-title">SpringAuthKit</div>
+        <nav>
+          <a href="#overview">Overview</a>
+          <a href="#installation">Installation</a>
+          <a href="#quickstart">Quick Start</a>
+          <a href="#configuration">Configuration</a>
+          <a href="#authentication">Authentication</a>
+          <a href="#jwt">JWT</a>
+          <a href="#users">Users</a>
+          <a href="#roles-permissions">Roles &amp; Permissions</a>
+          <a href="#otp">OTP</a>
+          <a href="#password-reset">Password Reset</a>
+          <a href="#api-reference">API Reference</a>
+          <a href="#architecture">Architecture</a>
+          <a href="#customization">Customization</a>
+          <a href="#production">Production</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <section id="hero" class="hero">
+          <div class="eyebrow">Spring Boot • Java • JWT • Maven</div>
+          <h1>Authentication infrastructure for Spring Boot.</h1>
+          <p class="lead">
+            SpringAuthKit is a reusable Spring Boot authentication and authorization library that adds JWT-based authentication,
+            registration, login, OTP, refresh-token rotation, and security wiring without requiring each application to rebuild the same foundation from scratch.
+          </p>
+
+          <div class="badge-row" aria-label="Technology badges">
+            <span class="badge">Spring Boot</span>
+            <span class="badge">Java 17</span>
+            <span class="badge">JWT</span>
+            <span class="badge">Maven</span>
+            <span class="badge">Apache 2.0</span>
+          </div>
+
+          <div class="cta-row">
+            <a class="button primary" href="#installation">Get Started</a>
+            <a class="button secondary" href="https://github.com/Devang559/SpringAuthKit" target="_blank" rel="noreferrer">GitHub</a>
+            <a class="button secondary" href="https://repo1.maven.org/maven2/io/github/devang559/spring-authkit/1.0.0/" target="_blank" rel="noreferrer">Maven Central</a>
+          </div>
+
+          <div class="hero-grid">
+            <div class="mini-card">
+              <h3>What it does</h3>
+              <div class="flow">
+                <div class="flow-step"><span class="num">1</span><span>Add dependency and properties</span></div>
+                <div class="flow-step"><span class="num">2</span><span>Auto-configure security, JWT, and user services</span></div>
+                <div class="flow-step"><span class="num">3</span><span>Authenticate requests and protect endpoints</span></div>
+              </div>
+            </div>
+
+            <div class="mini-card">
+              <h3>Current implementation</h3>
+              <div class="inline-list">
+                <div><strong>Core:</strong> Spring Security, JWT, JPA</div>
+                <div><strong>Auth:</strong> registration, login, refresh, logout</div>
+                <div><strong>Ops:</strong> OTP, verification, password reset</div>
+                <div><strong>Security:</strong> BCrypt, stateless filter chain</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="overview">
+          <div class="section-head">
+            <div class="kicker">Overview</div>
+            <h2>What is SpringAuthKit?</h2>
+          </div>
+          <div class="two-col">
+            <div class="info-card">
+              <h3>Reusable auth infrastructure</h3>
+              <p>
+                SpringAuthKit is a library for Spring Boot applications that need a consistent authentication and authorization foundation.
+                Instead of re-implementing the same login, JWT, password, and role logic repeatedly, a project can add the dependency and let the library wire in the common pieces.
+              </p>
+            </div>
+            <div class="info-card">
+              <h3>Purpose</h3>
+              <p>
+                The repository is focused on making a Spring Boot app easier to secure with a small set of configuration properties, default beans, and auto-configured services.
+                It depends on Spring Security, JWT, and JPA, and it exposes the authentication endpoints under <code>/auth</code>.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="why">
+          <div class="section-head">
+            <div class="kicker">Why SpringAuthKit</div>
+            <h2>Why add it to a Spring Boot project?</h2>
+          </div>
+          <div class="card-grid">
+            <article class="feature-card">
+              <div class="icon">🧩</div>
+              <h3>Less boilerplate</h3>
+              <p>The project wires up user services, token services, JWT parsing, and a security filter chain behind a small configuration surface.</p>
+            </article>
+            <article class="feature-card">
+              <div class="icon">🔐</div>
+              <h3>JWT-first</h3>
+              <p>Access tokens and refresh tokens are issued and validated by the library using the secret configured under <code>spring.authkit.jwt.secret</code>.</p>
+            </article>
+            <article class="feature-card">
+              <div class="icon">🧱</div>
+              <h3>Spring Boot integration</h3>
+              <p>The library registers auto-configurations and JPA repositories under the main package, so users typically only add the dependency and properties.</p>
+            </article>
+            <article class="feature-card">
+              <div class="icon">🪪</div>
+              <h3>Role and permission model</h3>
+              <p>Users can have roles and permissions. The principal carries role names and permission names as Spring Security authorities.</p>
+            </article>
+            <article class="feature-card">
+              <div class="icon">📧</div>
+              <h3>OTP and verification</h3>
+              <p>Email verification and password-reset flows are implemented as first-class repository features, with OTP issuance and verification logic.</p>
+            </article>
+            <article class="feature-card">
+              <div class="icon">🛡️</div>
+              <h3>Production-oriented wiring</h3>
+              <p>The code demonstrates stateless security, bean overrides, rate limiting, token rotation, and account lockout, but still expects the app to provide production secret and email infrastructure.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="features">
+          <div class="section-head">
+            <div class="kicker">Capabilities</div>
+            <h2>Implemented features in the current codebase</h2>
+          </div>
+          <div class="card-grid">
+            <article class="feature-card">
+              <div class="icon">🔑</div>
+              <h3>JWT authentication</h3>
+              <p>Access and refresh tokens are generated, parsed, and used in bearer-authenticated requests.</p>
+            </article>
+            <article class="feature-card">
+              <div class="icon">📋</div>
+              <h3>Registration and login</h3>
+              <p>Users can register with email, username, or phone and receive login tokens after successful authentication.</p>
+            </article>
+            <article class="feature-card">
+              <div class="icon">🔒</div>
+              <h3>Password hashing</h3>
+              <p>PasswordEncoder defaults to BCrypt via <code>BCryptPasswordEncoder</code>, and validation enforces configured password policy.</p>
+            </article>
+            <article class="feature-card">
+              <div class="icon">♻️</div>
+              <h3>Refresh tokens</h3>
+              <p>Tokens are stored as SHA-256 hashes and rotated on refresh; revoked or replaced tokens are rejected.</p>
+            </article>
+            <article class="feature-card">
+              <div class="icon">📧</div>
+              <h3>Email verification</h3>
+              <p>New users can be created in <code>PENDING_VERIFICATION</code> and activated only after OTP verification.</p>
+            </article>
+            <article class="feature-card">
+              <div class="icon">🔁</div>
+              <h3>OTP flows</h3>
+              <p>OTP issuance, verification, resend, and rate limiting are implemented for verification and password reset.</p>
+            </article>
+            <article class="feature-card">
+              <div class="icon">🗂️</div>
+              <h3>Roles and permissions</h3>
+              <p>Role names are configured and assigned to users; permissions can be attached to roles.</p>
+            </article>
+            <article class="feature-card">
+              <div class="icon">⏱️</div>
+              <h3>Rate limiting</h3>
+              <p>OTP and login attempts are limited with <code>RateLimiter</code>, backed by an in-memory implementation by default.</p>
+            </article>
+            <article class="feature-card">
+              <div class="icon">⚙️</div>
+              <h3>Auto-configuration</h3>
+              <p>Spring Boot auto-configurations register the security chain, JPA repositories, services, and default beans.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="installation">
+          <div class="section-head">
+            <div class="kicker">Installation</div>
+            <h2>Add SpringAuthKit to a Spring Boot application</h2>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-block">
+              <div class="code-header"><span>XML</span><button class="copy-btn" data-copy="xml">Copy</button></div>
+              <pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;io.github.devang559&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-authkit&lt;/artifactId&gt;
+    &lt;version&gt;1.0.0&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+            </div>
+          </div>
+
+          <div class="two-col" style="margin-top:1.2rem;">
+            <div class="info-card">
+              <h3>What happens after you add it</h3>
+              <ul>
+                <li><code>AuthKitAutoConfiguration</code> and <code>AuthKitSecurityAutoConfiguration</code> are imported by Spring Boot.</li>
+                <li>JPA repositories and entity scanning are enabled under <code>io.github.devang559.authkit</code>.</li>
+                <li>Beans like <code>PasswordEncoder</code>, <code>JwtService</code>, <code>TokenService</code>, controllers, and the JWT filter are created if missing.</li>
+                <li>The default security chain protects all endpoints by default except the configured public auth endpoints.</li>
+              </ul>
+            </div>
+            <div class="info-card">
+              <h3>Required application-level setup</h3>
+              <ul>
+                <li>A relational database such as PostgreSQL or H2 for testing.</li>
+                <li>A strong JWT secret under <code>spring.authkit.jwt.secret</code>.</li>
+                <li>An EmailService implementation if real email delivery is needed.</li>
+                <li>Application properties under the <code>spring.authkit</code> prefix.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="quickstart">
+          <div class="section-head">
+            <div class="kicker">Quick Start</div>
+            <h2>Minimal Spring Boot example</h2>
+          </div>
+
+          <div class="code-wrap">
+            <div class="code-block">
+              <div class="code-header"><span>Java</span><button class="copy-btn" data-copy="java-app">Copy</button></div>
+              <pre><code>import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class DemoApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
+}</code></pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-header"><span>YAML</span><button class="copy-btn" data-copy="yaml-config">Copy</button></div>
+              <pre><code>spring:
+  datasource:
+    url: jdbc:h2:mem:demo;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+  authkit:
+    authentication:
+      identifier: email
+    user:
+      email:
+        enabled: true
+        required: true
+      first-name:
+        enabled: true
+        required: false
+    password:
+      min-length: 8
+      require-lowercase: true
+      require-number: true
+    jwt:
+      secret: "${AUTHKIT_JWT_SECRET:change-me-to-a-long-random-string-1234567890}"
+      access-token-expiration: 15m
+      refresh-token-expiration: 7d
+    email:
+      verification-required: true
+      otp-length: 6
+      otp-expiration: 5m
+    roles:
+      enabled: true
+      default-role: USER
+      allowed: [USER, ADMIN]</code></pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-header"><span>Java</span><button class="copy-btn" data-copy="java-controller">Copy</button></div>
+              <pre><code>import io.github.devang559.authkit.user.AuthKitUser;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api")
+public class NoteController {
+    @GetMapping("/notes")
+    public Map&lt;String, Object&gt; notes(@AuthenticationPrincipal AuthKitUser principal) {
+        return Map.of(
+            "user", principal.getId(),
+            "identifier", principal.getUsername(),
+            "roles", principal.getRoleNames(),
+            "authorities", principal.getAuthorities().stream().map(Object::toString).toList()
+        );
+    }
+}</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="configuration">
+          <div class="section-head">
+            <div class="kicker">Configuration</div>
+            <h2>Configuration properties</h2>
+          </div>
+
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Property</th>
+                  <th>Type</th>
+                  <th>Default</th>
+                  <th>What it controls</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><code>spring.authkit.enabled</code></td><td>boolean</td><td>true</td><td>Master switch for all auto-configuration.</td></tr>
+                <tr><td><code>spring.authkit.authentication.identifier</code></td><td>enum</td><td>EMAIL</td><td>Identifier used for login: <code>EMAIL</code>, <code>USERNAME</code>, or <code>PHONE</code>.</td></tr>
+                <tr><td><code>spring.authkit.schema.mode</code></td><td>enum</td><td>MANAGED</td><td>Schema mode: <code>MANAGED</code> or <code>EXTERNAL</code>.</td></tr>
+                <tr><td><code>spring.authkit.user.mode</code></td><td>enum</td><td>AUTHKIT</td><td>Application-managed versus authkit-managed user model.</td></tr>
+                <tr><td><code>spring.authkit.user.email.enabled</code></td><td>boolean</td><td>true</td><td>Whether the email field exists and is persisted.</td></tr>
+                <tr><td><code>spring.authkit.user.email.required</code></td><td>boolean</td><td>false</td><td>Whether email is required during registration.</td></tr>
+                <tr><td><code>spring.authkit.user.username.enabled</code></td><td>boolean</td><td>false</td><td>Whether username is enabled as an identity field.</td></tr>
+                <tr><td><code>spring.authkit.user.phone.enabled</code></td><td>boolean</td><td>false</td><td>Whether phone is enabled as an identity field.</td></tr>
+                <tr><td><code>spring.authkit.password.min-length</code></td><td>int</td><td>8</td><td>Minimum password length; code validates a minimum of 8.</td></tr>
+                <tr><td><code>spring.authkit.password.require-lowercase</code></td><td>boolean</td><td>true</td><td>Requires lowercase letters.</td></tr>
+                <tr><td><code>spring.authkit.password.require-number</code></td><td>boolean</td><td>true</td><td>Requires at least one numeric character.</td></tr>
+                <tr><td><code>spring.authkit.password.require-uppercase</code></td><td>boolean</td><td>false</td><td>Requires uppercase letters.</td></tr>
+                <tr><td><code>spring.authkit.password.require-special-character</code></td><td>boolean</td><td>false</td><td>Requires at least one special character.</td></tr>
+                <tr><td><code>spring.authkit.jwt.enabled</code></td><td>boolean</td><td>true</td><td>Turns JWT token generation and validation on or off.</td></tr>
+                <tr><td><code>spring.authkit.jwt.secret</code></td><td>String</td><td>empty</td><td>JWT HMAC secret. The config validation rejects a blank or short secret.</td></tr>
+                <tr><td><code>spring.authkit.jwt.access-token-expiration</code></td><td>Duration</td><td>15m</td><td>Access-token lifetime.</td></tr>
+                <tr><td><code>spring.authkit.jwt.refresh-token-expiration</code></td><td>Duration</td><td>7d</td><td>Refresh-token lifetime.</td></tr>
+                <tr><td><code>spring.authkit.jwt.issuer</code></td><td>String</td><td>spring-authkit</td><td>JWT issuer claim value.</td></tr>
+                <tr><td><code>spring.authkit.email.verification-required</code></td><td>boolean</td><td>true</td><td>Requires email verification before login when email is enabled.</td></tr>
+                <tr><td><code>spring.authkit.email.otp-enabled</code></td><td>boolean</td><td>true</td><td>Turns OTP issuance and verification on.</td></tr>
+                <tr><td><code>spring.authkit.email.otp-length</code></td><td>int</td><td>6</td><td>Generated OTP length; valid range is 4 to 12.</td></tr>
+                <tr><td><code>spring.authkit.email.otp-expiration</code></td><td>Duration</td><td>5m</td><td>OTP validity period.</td></tr>
+                <tr><td><code>spring.authkit.email.max-attempts</code></td><td>int</td><td>5</td><td>Maximum OTP verification attempts before failure.</td></tr>
+                <tr><td><code>spring.authkit.roles.enabled</code></td><td>boolean</td><td>true</td><td>Enables role assignment and checks.</td></tr>
+                <tr><td><code>spring.authkit.roles.allowed</code></td><td>List&lt;String&gt;</td><td>[USER, ADMIN, MODERATOR]</td><td>Allowed role names; default role must be included.</td></tr>
+                <tr><td><code>spring.authkit.roles.default-role</code></td><td>String</td><td>USER</td><td>Role assigned to a newly registered user.</td></tr>
+                <tr><td><code>spring.authkit.permissions.enabled</code></td><td>boolean</td><td>true</td><td>Allows permission names to be attached to roles and included in authorities.</td></tr>
+                <tr><td><code>spring.authkit.rate-limit.enabled</code></td><td>boolean</td><td>true</td><td>Enables login and OTP rate limiting.</td></tr>
+                <tr><td><code>spring.authkit.rate-limit.login.max-attempts</code></td><td>int</td><td>5</td><td>Max attempts in the login rate-limit window.</td></tr>
+                <tr><td><code>spring.authkit.rate-limit.login.window</code></td><td>Duration</td><td>1m</td><td>Login rate-limit window.</td></tr>
+                <tr><td><code>spring.authkit.rate-limit.otp.max-attempts</code></td><td>int</td><td>5</td><td>Max OTP attempts in the OTP rate-limit window.</td></tr>
+                <tr><td><code>spring.authkit.rate-limit.otp.window</code></td><td>Duration</td><td>5m</td><td>OTP rate-limit window.</td></tr>
+                <tr><td><code>spring.authkit.security.account-lockout-enabled</code></td><td>boolean</td><td>true</td><td>Locks accounts after repeated failed logins.</td></tr>
+                <tr><td><code>spring.authkit.security.max-failed-attempts</code></td><td>int</td><td>5</td><td>Failure threshold before lockout.</td></tr>
+                <tr><td><code>spring.authkit.security.lockout-duration</code></td><td>Duration</td><td>15m</td><td>How long a user remains locked after too many failures.</td></tr>
+                <tr><td><code>spring.authkit.security.public-endpoints</code></td><td>List&lt;String&gt;</td><td>/auth/* + Swagger paths</td><td>Paths that are permitted without authentication.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="authentication">
+          <div class="section-head">
+            <div class="kicker">Authentication</div>
+            <h2>Authentication flow</h2>
+          </div>
+          <div class="two-col">
+            <div class="info-card">
+              <h3>Request flow</h3>
+              <ol>
+                <li>A request arrives and passes through the default Spring Security chain.</li>
+                <li><code>AuthKitJwtAuthenticationFilter</code> checks the <code>Authorization: Bearer ...</code> header.</li>
+                <li>The user ID is extracted from the token and the user record is looked up.</li>
+                <li><code>AuthKitUser</code> is created and placed into the Spring Security context if the token is valid.</li>
+              </ol>
+            </div>
+            <div class="info-card">
+              <h3>Login and registration</h3>
+              <ul>
+                <li>Registration validates required fields, password policy, and uniqueness checks.</li>
+                <li>Passwords are encoded with BCrypt by default.</li>
+                <li>Users receive a default role and are set to <code>PENDING_VERIFICATION</code> when email verification is enabled.</li>
+                <li>Successful login issues access and refresh tokens and returns the token pair.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="jwt">
+          <div class="section-head">
+            <div class="kicker">JWT</div>
+            <h2>JSON Web Tokens</h2>
+          </div>
+          <div class="two-col">
+            <div class="info-card">
+              <h3>Access token</h3>
+              <p>Access tokens are signed with a secret key returned from the configured JWT secret. They include the subject as the user ID, a JWT ID, issuer, issued-at timestamp, expiration, and the claims <code>type</code>, <code>roles</code>, and <code>permissions</code>.</p>
+            </div>
+            <div class="info-card">
+              <h3>Refresh token</h3>
+              <p>Refresh tokens similarly carry the subject, issuer, and <code>type = refresh</code>, but they are stored hashed in the database and rotated when used. A revoked or replaced refresh token is rejected by the service.</p>
+            </div>
+          </div>
+
+          <div class="code-block" style="margin-top:1rem;">
+            <div class="code-header"><span>JSON</span><button class="copy-btn" data-copy="jwt-claims">Copy</button></div>
+            <pre><code>{
+  "sub": "3a8c1d7d-6b6d-48a0-bf2d-12d97925f0f7",
+  "iss": "spring-authkit",
+  "iat": 1712345678,
+  "exp": 1712346278,
+  "type": "access",
+  "roles": ["USER", "ADMIN"],
+  "permissions": ["read:notes"]
+}</code></pre>
+          </div>
+        </section>
+
+        <section id="users">
+          <div class="section-head">
+            <div class="kicker">Users</div>
+            <h2>Users and user fields</h2>
+          </div>
+          <div class="info-card">
+            <p><code>AuthUser</code> is the main JPA entity, persisted to the <code>auth_users</code> table. It stores the identifier fields, password, account status, email/phone verification flags, lockout metadata, created/updated timestamps, and the roles assigned to the user.</p>
+            <div class="status-row">
+              <span class="pill">PENDING_VERIFICATION</span>
+              <span class="pill">ACTIVE</span>
+              <span class="pill warn">LOCKED</span>
+              <span class="pill alert">DISABLED</span>
+            </div>
+            <ul>
+              <li>Fields enabled by configuration include username, email, phone, first name, last name, display name, and avatar.</li>
+              <li><code>AuthKitUser</code> is the Spring Security principal and exposes role names and permissions as authorities.</li>
+              <li>Account checks include <code>isLockedNow()</code> and lockout state from failed login attempts.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="roles-permissions">
+          <div class="section-head">
+            <div class="kicker">Roles &amp; Permissions</div>
+            <h2>Roles and permissions</h2>
+          </div>
+          <div class="two-col">
+            <div class="info-card">
+              <h3>Roles</h3>
+              <p><code>AuthRole</code> is an entity persisted in <code>auth_roles</code> with a unique name. Role names are configured through <code>spring.authkit.roles.allowed</code> and a default role is assigned by <code>RoleService.assignDefaultRole()</code>.</p>
+            </div>
+            <div class="info-card">
+              <h3>Permissions</h3>
+              <p><code>AuthPermission</code> is stored in <code>auth_permissions</code>. Permissions can be attached to roles with <code>auth_role_permissions</code>, and they are added to the user’s granted authorities when permissions are enabled.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="otp">
+          <div class="section-head">
+            <div class="kicker">OTP</div>
+            <h2>Email verification and OTP flows</h2>
+          </div>
+          <div class="info-card">
+            <p><code>OtpService</code> issues OTPs with a configured generator and stores them in the <code>auth_otps</code> table. OTPs are hashed before storage, and their purpose is one of <code>EMAIL_VERIFICATION</code> or <code>PASSWORD_RESET</code>.</p>
+            <ul>
+              <li>Default OTP generation is performed by <code>SecureRandomOtpGenerator</code>.</li>
+              <li>OTP lifecycle includes send, resend, verify, expiration, and rate limiting.</li>
+              <li>Email delivery is handled by <code>EmailService</code>; the default implementation logs delivery and is meant to be overridden.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="password-reset">
+          <div class="section-head">
+            <div class="kicker">Password Reset</div>
+            <h2>Reset flow</h2>
+          </div>
+          <div class="info-card">
+            <p>When a user requests a reset, the library checks whether an email exists and, if it does, sends a password-reset OTP. The reset request contains the email, the token, and the new password. The password is validated against the configured policy and then hashed before saving.</p>
+          </div>
+        </section>
+
+        <section id="api-reference">
+          <div class="section-head">
+            <div class="kicker">API reference</div>
+            <h2>Public authentication endpoints</h2>
+          </div>
+
+          <div class="api-list">
+            <article class="api-card">
+              <h3><span class="endpoint-label post">POST</span> /auth/register</h3>
+              <div class="meta">
+                <span class="meta-pill">Purpose: register user</span>
+                <span class="meta-pill">Auth: none</span>
+              </div>
+              <p><strong>Request:</strong></p>
+              <pre><code>{
+  "email": "user@example.com",
+  "username": "demo-user",
+  "phone": "+1234567890",
+  "password": "StrongPass123",
+  "firstName": "Ada",
+  "lastName": "Lovelace",
+  "displayName": "Ada",
+  "avatar": "https://example.com/avatar.png"
+}</code></pre>
+              <p><strong>Response:</strong></p>
+              <pre><code>{
+  "message": "Registration successful. Verify your email to activate your account."
+}</code></pre>
+            </article>
+
+            <article class="api-card">
+              <h3><span class="endpoint-label post">POST</span> /auth/login</h3>
+              <div class="meta">
+                <span class="meta-pill">Purpose: issue tokens</span>
+                <span class="meta-pill">Auth: none</span>
+              </div>
+              <p><strong>Request:</strong></p>
+              <pre><code>{
+  "identifier": "user@example.com",
+  "password": "StrongPass123"
+}</code></pre>
+              <p><strong>Response:</strong></p>
+              <pre><code>{
+  "accessToken": "eyJ...",
+  "refreshToken": "eyJ...",
+  "tokenType": "Bearer",
+  "expiresIn": 900
+}</code></pre>
+            </article>
+
+            <article class="api-card">
+              <h3><span class="endpoint-label post">POST</span> /auth/refresh</h3>
+              <div class="meta">
+                <span class="meta-pill">Purpose: rotate refresh token</span>
+                <span class="meta-pill">Auth: none</span>
+              </div>
+              <pre><code>{
+  "refreshToken": "eyJ..."
+}</code></pre>
+              <p>Returns a new <code>LoginResponse</code> with rotated access and refresh tokens.</p>
+            </article>
+
+            <article class="api-card">
+              <h3><span class="endpoint-label post">POST</span> /auth/logout</h3>
+              <div class="meta">
+                <span class="meta-pill">Purpose: revoke refresh token</span>
+                <span class="meta-pill">Auth: none</span>
+              </div>
+              <pre><code>{
+  "refreshToken": "eyJ..."
+}</code></pre>
+              <p>Marks the refresh token as revoked in the persistence layer.</p>
+            </article>
+
+            <article class="api-card">
+              <h3><span class="endpoint-label post">POST</span> /auth/send-otp</h3>
+              <div class="meta">
+                <span class="meta-pill">Purpose: issue OTP</span>
+                <span class="meta-pill">Auth: none</span>
+              </div>
+              <pre><code>{
+  "email": "user@example.com",
+  "purpose": "EMAIL_VERIFICATION"
+}</code></pre>
+            </article>
+
+            <article class="api-card">
+              <h3><span class="endpoint-label post">POST</span> /auth/verify-otp</h3>
+              <div class="meta">
+                <span class="meta-pill">Purpose: verify OTP</span>
+                <span class="meta-pill">Auth: none</span>
+              </div>
+              <pre><code>{
+  "email": "user@example.com",
+  "otp": "123456",
+  "purpose": "EMAIL_VERIFICATION"
+}</code></pre>
+            </article>
+
+            <article class="api-card">
+              <h3><span class="endpoint-label post">POST</span> /auth/resend-otp</h3>
+              <div class="meta">
+                <span class="meta-pill">Purpose: reissue OTP</span>
+                <span class="meta-pill">Auth: none</span>
+              </div>
+              <pre><code>{
+  "email": "user@example.com",
+  "purpose": "PASSWORD_RESET"
+}</code></pre>
+            </article>
+
+            <article class="api-card">
+              <h3><span class="endpoint-label post">POST</span> /auth/forgot-password</h3>
+              <div class="meta">
+                <span class="meta-pill">Purpose: request reset OTP</span>
+                <span class="meta-pill">Auth: none</span>
+              </div>
+              <pre><code>{
+  "email": "user@example.com"
+}</code></pre>
+            </article>
+
+            <article class="api-card">
+              <h3><span class="endpoint-label post">POST</span> /auth/reset-password</h3>
+              <div class="meta">
+                <span class="meta-pill">Purpose: set new password</span>
+                <span class="meta-pill">Auth: none</span>
+              </div>
+              <pre><code>{
+  "email": "user@example.com",
+  "token": "123456",
+  "password": "NewStrongPass456"
+}</code></pre>
+            </article>
+          </div>
+        </section>
+
+        <section id="architecture">
+          <div class="section-head">
+            <div class="kicker">Architecture</div>
+            <h2>Architecture overview</h2>
+          </div>
+
+          <div class="architecture-diagram panel section-pad">
+            <div class="diagram-row">
+              <div class="node primary">Spring Boot app</div>
+              <div class="connector" aria-hidden="true"></div>
+              <div class="node primary">SpringAuthKit</div>
+              <div class="connector" aria-hidden="true"></div>
+              <div class="node">Database</div>
+            </div>
+            <div class="diagram-row">
+              <div class="node">Controller layer</div>
+              <div class="node">Authentication services</div>
+              <div class="node">Security filter chain</div>
+              <div class="node">JWT service</div>
+              <div class="node">User/role/token entities</div>
+            </div>
+          </div>
+
+          <div class="two-col" style="margin-top:1rem;">
+            <div class="info-card">
+              <h3>Major package areas</h3>
+              <ul>
+                <li><code>autoconfigure</code> — Spring Boot auto-configurations and bean registration.</li>
+                <li><code>config</code> — property binding and runtime validation.</li>
+                <li><code>authentication</code> — registration, login, verification, reset services.</li>
+                <li><code>jwt</code> — token creation and parsing.</li>
+                <li><code>security</code> — bearer-authentication filter and HTTP security configuration.</li>
+              </ul>
+            </div>
+            <div class="info-card">
+              <h3>Persistence</h3>
+              <ul>
+                <li><code>user</code> — <code>AuthUser</code>, repository, and details service.</li>
+                <li><code>role</code> and <code>permission</code> — authorization model.</li>
+                <li><code>token</code> — refresh token entities and rotation logic.</li>
+                <li><code>otp</code> — OTP records and purpose handling.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="database">
+          <div class="section-head">
+            <div class="kicker">Database</div>
+            <h2>JPA entities and persistence</h2>
+          </div>
+          <div class="info-card">
+            <p>The library persists a small set of domain entities using JPA:</p>
+            <ul>
+              <li><code>AuthUser</code> in <code>auth_users</code></li>
+              <li><code>AuthRole</code> in <code>auth_roles</code></li>
+              <li><code>AuthPermission</code> in <code>auth_permissions</code></li>
+              <li><code>RefreshToken</code> in <code>auth_refresh_tokens</code></li>
+              <li><code>Otp</code> in <code>auth_otps</code></li>
+              <li><code>AuditLog</code> in <code>audit_logs</code> if the audit package is used</li>
+            </ul>
+            <p>Relationships include <code>AuthUser</code> to many roles, <code>AuthRole</code> to many permissions, and <code>RefreshToken</code> to a single user. The refresh-token hash is stored for rotation and revocation checks.</p>
+          </div>
+        </section>
+
+        <section id="customization">
+          <div class="section-head">
+            <div class="kicker">Customization</div>
+            <h2>Override points</h2>
+          </div>
+          <div class="two-col">
+            <div class="info-card">
+              <h3>Default beans</h3>
+              <p>The auto-configuration uses <code>@ConditionalOnMissingBean</code> for the main extension points, making it possible to replace default services without removing the library’s security setup.</p>
+              <ul>
+                <li><code>PasswordEncoder</code> — replace BCrypt with another encoder.</li>
+                <li><code>EmailService</code> — integrate production email delivery.</li>
+                <li><code>RateLimiter</code> — swap in Redis, Caffeine, or another implementation.</li>
+                <li><code>OtpGenerator</code> — customize OTP generation policy.</li>
+                <li><code>SecurityFilterChain</code> — provide your own chain if you need different rules.</li>
+              </ul>
+            </div>
+            <div class="info-card">
+              <h3>Example</h3>
+              <div class="code-block">
+                <div class="code-header"><span>Java</span><button class="copy-btn" data-copy="custom-email">Copy</button></div>
+                <pre><code>@Configuration
+public class MailConfig {
+    @Bean
+    EmailService authKitEmailService(JavaMailSender mailSender) {
+        return (to, otp) -> {
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setTo(to);
+            msg.setSubject("Your verification code");
+            msg.setText("Code: " + otp);
+            mailSender.send(msg);
+        };
+    }
+}</code></pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="production">
+          <div class="section-head">
+            <div class="kicker">Production considerations</div>
+            <h2>What SpringAuthKit provides vs. what the application must supply</h2>
+          </div>
+          <div class="two-col">
+            <div class="info-card">
+              <h3>SpringAuthKit provides</h3>
+              <ul>
+                <li>Security filter chain, JWT parsing, and authentication filter registration.</li>
+                <li>Login, OTP, email verification, password reset, and refresh-token logic.</li>
+                <li>Default bean wiring and property-based runtime configuration.</li>
+                <li>BCrypt password hashing and stateless token validation.</li>
+              </ul>
+            </div>
+            <div class="info-card">
+              <h3>The app should configure</h3>
+              <ul>
+                <li>Strong JWT secret management, ideally via environment variables or a secret manager.</li>
+                <li>Relational database credentials and migrations or DDL management.</li>
+                <li>Email provider integration for real delivery and notification traffic.</li>
+                <li>HTTPS and deployment-time security settings.</li>
+                <li>Monitoring, logs, and environment-specific configuration.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="faq">
+          <div class="section-head">
+            <div class="kicker">FAQ</div>
+            <h2>Common questions</h2>
+          </div>
+
+          <div class="faq-item">
+            <details>
+              <summary>What is SpringAuthKit?</summary>
+              <div class="faq-answer">It is a reusable Spring Boot authentication/security library that auto-configures user, JWT, role, OTP, and token services for applications that need a common auth foundation.</div>
+            </details>
+          </div>
+
+          <div class="faq-item">
+            <details>
+              <summary>Does it require Spring Security?</summary>
+              <div class="faq-answer">Yes. The project includes <code>spring-boot-starter-security</code> and configures a stateless filter chain and JWT authentication filter.</div>
+            </details>
+          </div>
+
+          <div class="faq-item">
+            <details>
+              <summary>Does it use JWT?</summary>
+              <div class="faq-answer">Yes. JWTs are issued for access and refresh tokens, and the filter resolves the principal from bearer tokens using the configured secret and issuer.</div>
+            </details>
+          </div>
+
+          <div class="faq-item">
+            <details>
+              <summary>Does it require a database?</summary>
+              <div class="faq-answer">Yes. The library persists users, roles, permissions, OTP records, and refresh tokens through Spring Data JPA entities and repositories.</div>
+            </details>
+          </div>
+
+          <div class="faq-item">
+            <details>
+              <summary>Can I customize the PasswordEncoder?</summary>
+              <div class="faq-answer">Yes. A bean of type <code>PasswordEncoder</code> can be overridden; otherwise the default is a BCrypt encoder.</div>
+            </details>
+          </div>
+
+          <div class="faq-item">
+            <details>
+              <summary>Can I replace the email service?</summary>
+              <div class="faq-answer">Yes. The auto-configuration registers a default <code>EmailService</code>, but any missing bean of that type can be overridden with your own implementation.</div>
+            </details>
+          </div>
+
+          <div class="faq-item">
+            <details>
+              <summary>How does auto-configuration work?</summary>
+              <div class="faq-answer">The library registers <code>AuthKitAutoConfiguration</code> and <code>AuthKitSecurityAutoConfiguration</code> as Spring Boot auto-configurations. These classes enable JPA scanning, configuration properties, security components, and default services when the application has the library on the classpath and <code>spring.authkit.enabled=true</code>.</div>
+            </details>
+          </div>
+
+          <div class="faq-item">
+            <details>
+              <summary>How are roles handled?</summary>
+              <div class="faq-answer">Roles are persisted as <code>AuthRole</code> entities, and a configured default role is assigned at registration. The principal receives role authorities like <code>ROLE_USER</code>.</div>
+            </details>
+          </div>
+
+          <div class="faq-item">
+            <details>
+              <summary>How are permissions handled?</summary>
+              <div class="faq-answer">Permissions are persisted separately and attached to roles. When enabled, they are added to the authenticated principal as granted authorities.</div>
+            </details>
+          </div>
+
+          <div class="faq-item">
+            <details>
+              <summary>How do I configure JWT expiration?</summary>
+              <div class="faq-answer">Use <code>spring.authkit.jwt.access-token-expiration</code> and <code>spring.authkit.jwt.refresh-token-expiration</code>. The default access-expiration is 15 minutes and the default refresh-expiration is 7 days.</div>
+            </details>
+          </div>
+
+          <div class="faq-item">
+            <details>
+              <summary>How do I disable SpringAuthKit?</summary>
+              <div class="faq-answer">Set <code>spring.authkit.enabled=false</code>. Spring Boot will not apply the library’s auto-configurations when that property is disabled.</div>
+            </details>
+          </div>
+
+          <div class="faq-item">
+            <details>
+              <summary>How do I override a default bean?</summary>
+              <div class="faq-answer">Create your own bean of the same type in the application context. The library config uses <code>@ConditionalOnMissingBean</code>, so your bean wins if it is present.</div>
+            </details>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <button class="back-to-top" aria-label="Back to top">↑</button>
+
+    <script>
+      const copyButtons = document.querySelectorAll('.copy-btn');
+      copyButtons.forEach((button) => {
+        button.addEventListener('click', async () => {
+          const text = button.closest('.code-block').querySelector('code').innerText;
+          try {
+            await navigator.clipboard.writeText(text);
+            const previous = button.textContent;
+            button.textContent = 'Copied';
+            setTimeout(() => { button.textContent = previous; }, 1200);
+          } catch (error) {
+            button.textContent = 'Copy failed';
+            setTimeout(() => { button.textContent = 'Copy'; }, 1200);
+          }
+        });
+      });
+
+      const mobileMenuButton = document.querySelector('.mobile-menu-toggle');
+      const mobileNav = document.querySelector('.mobile-nav');
+      if (mobileMenuButton && mobileNav) {
+        mobileMenuButton.addEventListener('click', () => {
+          const isOpen = mobileNav.classList.toggle('open');
+          mobileMenuButton.setAttribute('aria-expanded', String(isOpen));
+        });
+      }
+
+      const navLinks = document.querySelectorAll('.nav a, .sidebar nav a, .mobile-nav a');
+      const sections = [...document.querySelectorAll('main section[id]')];
+
+      const setActiveLink = () => {
+        const scrollY = window.scrollY + 120;
+        let currentId = sections[0]?.id || '';
+
+        sections.forEach((section) => {
+          if (scrollY >= section.offsetTop) currentId = section.id;
+        });
+
+        navLinks.forEach((link) => {
+          const href = link.getAttribute('href');
+          const isActive = href === '#' + currentId;
+          link.classList.toggle('active', isActive);
+        });
+      };
+
+      window.addEventListener('scroll', setActiveLink, { passive: true });
+      setActiveLink();
+
+      const backToTop = document.querySelector('.back-to-top');
+      const handleBackToTop = () => {
+        if (window.scrollY > 300) {
+          backToTop.classList.add('visible');
+        } else {
+          backToTop.classList.remove('visible');
+        }
+      };
+      window.addEventListener('scroll', handleBackToTop, { passive: true });
+      backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+      handleBackToTop();
+    </script>
+  </body>
+</html>
